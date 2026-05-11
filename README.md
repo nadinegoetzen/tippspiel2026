@@ -1,1 +1,0 @@
-# tippspiel2026
