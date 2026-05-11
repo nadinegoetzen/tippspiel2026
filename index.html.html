@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tippspiel · FEI World Championships Aachen 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-pale: #F5E8C0;
+    --dark: #0D0D0D;
+    --dark2: #1A1A1A;
+    --dark3: #252525;
+    --green: #2A6B4A;
+    --green-light: #3A8A5E;
+    --cream: #F9F5EC;
+    --text: #2C2C2C;
+    --muted: #888;
+    --border: rgba(201,168,76,0.25);
+    --shadow: 0 8px 40px rgba(0,0,0,0.10);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--text); min-height:100vh; }
+
+  /* HEADER */
+  header { background:var(--dark); position:relative; overflow:hidden; }
+  header::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 70% 50%,rgba(201,168,76,.15) 0%,transparent 70%); pointer-events:none; }
+  .header-inner { max-width:1100px; margin:0 auto; padding:40px 32px 36px; display:flex; align-items:center; gap:24px; position:relative; flex-wrap:wrap; }
+  .header-emblem { width:72px; height:72px; border:2px solid var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink:0; background:rgba(201,168,76,.08); }
+  .header-text h1 { font-family:'Playfair Display',serif; font-size:clamp(20px,3.5vw,34px); color:var(--gold-light); line-height:1.2; }
+  .header-text p { color:rgba(255,255,255,.5); font-size:13px; margin-top:5px; letter-spacing:.05em; text-transform:uppercase; }
+  .header-nav { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
+  .nav-btn { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:rgba(255,255,255,.7); padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px; font-family:'DM Sans',sans-serif; transition:all .2s; }
+  .nav-btn:hover,.nav-btn.active { background:var(--gold); border-color:var(--gold); color:var(--dark); font-weight:600; }
+
+  /* LAYOUT */
+  main { max-width:1100px; margin:0 auto; padding:36px 32px 80px; }
+  .view { display:none; }
+  .view.active { display:block; }
+
+  /* LOADER */
+  #loader { position:fixed; inset:0; background:var(--cream); display:flex; align-items:center; justify-content:center; z-index:999; flex-direction:column; gap:16px; }
+  #loader .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite; }
+  #loader p { color:var(--muted); font-size:14px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* CARDS & FORMS */
+  .card { background:#fff; border:1px solid var(--border); border-radius:16px; padding:40px; box-shadow:var(--shadow); }
+  .register-wrap { max-width:480px; margin:50px auto 0; }
+  .card h2 { font-family:'Playfair Display',serif; font-size:24px; margin-bottom:6px; }
+  .card p.sub { color:var(--muted); font-size:14px; margin-bottom:24px; }
+  label { display:block; font-size:12px; font-weight:600; color:var(--text); margin-bottom:5px; letter-spacing:.04em; text-transform:uppercase; }
+  input[type=text],input[type=password],select { width:100%; padding:11px 14px; border:1.5px solid #E0D9CC; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); background:var(--cream); outline:none; transition:border-color .2s; margin-bottom:18px; }
+  input:focus,select:focus { border-color:var(--gold); background:#fff; }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:12px 24px; border-radius:8px; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:600; font-size:14px; transition:all .2s; }
+  .btn-primary { background:var(--gold); color:var(--dark); width:100%; justify-content:center; }
+  .btn-primary:hover { background:var(--gold-light); transform:translateY(-1px); }
+  .btn-secondary { background:var(--dark); color:#fff; }
+  .btn-secondary:hover { background:var(--dark2); }
+  .btn-outline { background:transparent; border:1.5px solid var(--gold); color:var(--gold); }
+  .btn-outline:hover { background:var(--gold); color:var(--dark); }
+  .btn-danger { background:#dc3545; color:#fff; font-size:12px; padding:7px 14px; }
+  .btn-sm { padding:8px 16px; font-size:13px; width:auto; }
+  .link-btn { background:none; border:none; color:var(--gold); cursor:pointer; font-size:14px; font-family:'DM Sans',sans-serif; text-decoration:underline; margin-top:10px; }
+  .switch-hint { text-align:center; margin-top:14px; color:var(--muted); font-size:13px; }
+  .error-msg { color:#c0392b; font-size:13px; margin-top:-10px; margin-bottom:14px; display:none; }
+  .success-msg { color:var(--green); font-size:14px; font-weight:600; display:none; margin-top:10px; }
+
+  /* DEADLINE */
+  .deadline-banner { background:linear-gradient(135deg,var(--green) 0%,var(--green-light) 100%); color:#fff; border-radius:10px; padding:13px 18px; font-size:13px; margin-bottom:24px; display:flex; align-items:center; gap:10px; }
+
+  /* SECTION TITLES */
+  .section-title { font-family:'Playfair Display',serif; font-size:19px; color:var(--dark); padding-bottom:10px; border-bottom:2px solid var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .badge { background:var(--gold); color:var(--dark); font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; letter-spacing:.05em; text-transform:uppercase; }
+
+  /* TIPS HEADER */
+  .tips-header { display:flex; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+  .tips-header h2 { font-family:'Playfair Display',serif; font-size:26px; }
+  .user-badge { background:var(--dark); color:var(--gold-light); padding:7px 16px; border-radius:20px; font-size:13px; font-weight:600; margin-left:auto; }
+
+  /* POINTS OVERVIEW */
+  .points-overview { background:var(--dark); border-radius:12px; padding:24px; color:#fff; margin-bottom:28px; }
+  .points-overview h3 { font-family:'Playfair Display',serif; font-size:18px; color:var(--gold-light); margin-bottom:14px; }
+  .points-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+  .points-item { background:rgba(255,255,255,.06); border-radius:8px; padding:11px 14px; font-size:13px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .pts { background:var(--gold); color:var(--dark); font-weight:700; font-size:13px; padding:2px 10px; border-radius:20px; white-space:nowrap; }
+
+  /* TIP CARDS */
+  .tips-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px; margin-bottom:32px; }
+  .tip-card { background:#fff; border:1.5px solid var(--border); border-radius:12px; padding:18px; transition:border-color .2s,box-shadow .2s; }
+  .tip-card:hover { border-color:var(--gold); box-shadow:0 4px 18px rgba(201,168,76,.12); }
+  .tip-card .disc { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--green); margin-bottom:5px; }
+  .tip-card .question { font-size:13px; font-weight:600; color:var(--dark); margin-bottom:10px; line-height:1.4; }
+  .tip-card select { margin-bottom:0; font-size:13px; }
+  .tip-card .pts-info { font-size:11px; color:var(--muted); margin-top:5px; }
+
+  /* MEDAL BUTTONS */
+  .germany-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; margin-bottom:32px; }
+  .medal-btns { display:flex; gap:5px; flex-wrap:wrap; }
+  .medal-btn { flex:1; min-width:64px; padding:8px 4px; border-radius:7px; border:1.5px solid #e0d9cc; background:var(--cream); cursor:pointer; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; transition:all .15s; text-align:center; color:var(--text); }
+  .medal-btn:hover { border-color:var(--gold); }
+  .medal-btn.sel-gold   { background:#FFD700; border-color:#C9A84C; color:#333; }
+  .medal-btn.sel-silver { background:#C0C0C0; border-color:#999; color:#333; }
+  .medal-btn.sel-bronze { background:#CD7F32; border-color:#A05A20; color:#fff; }
+  .medal-btn.sel-none   { background:var(--dark3); border-color:var(--dark); color:#fff; }
+
+  /* MEDAL TABLE TIP */
+  .medal-table-wrap { background:#fff; border:1.5px solid var(--border); border-radius:12px; padding:22px; margin-bottom:32px; }
+  .medal-table-wrap select { max-width:340px; }
+
+  /* SAVE AREA */
+  .save-area { background:var(--dark); border-radius:16px; padding:28px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+  .save-area p { color:rgba(255,255,255,.55); font-size:13px; }
+  .save-area strong { color:var(--gold-light); display:block; font-size:15px; margin-bottom:4px; }
+
+  /* RANKING */
+  .ranking-header { margin-bottom:24px; }
+  .ranking-header h2 { font-family:'Playfair Display',serif; font-size:26px; margin-bottom:4px; }
+  .ranking-header p { color:var(--muted); font-size:13px; }
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:var(--shadow); }
+  thead { background:var(--dark); }
+  thead th { padding:13px 18px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--gold-light); }
+  tbody tr { border-bottom:1px solid rgba(0,0,0,.06); transition:background .15s; }
+  tbody tr:hover { background:rgba(201,168,76,.05); }
+  tbody td { padding:13px 18px; font-size:14px; }
+  .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; font-weight:700; font-size:12px; }
+  .r1 { background:#FFD700; color:#333; }
+  .r2 { background:#C0C0C0; color:#333; }
+  .r3 { background:#CD7F32; color:#fff; }
+  .rn { background:var(--cream); color:var(--muted); }
+  .score-pill { display:inline-block; background:var(--green); color:#fff; padding:3px 11px; border-radius:20px; font-weight:700; font-size:12px; }
+  .score-zero { background:#ddd; color:var(--muted); }
+
+  /* ADMIN */
+  .admin-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; margin-bottom:28px; }
+  .admin-card { background:#fff; border:1.5px solid var(--border); border-radius:12px; padding:18px; }
+  .admin-card .disc-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--green); margin-bottom:8px; }
+  .admin-card label { font-size:11px; }
+  .admin-card select { font-size:13px; margin-bottom:10px; }
+  .admin-card .btn { font-size:13px; padding:9px 18px; width:100%; justify-content:center; }
+
+  @media(max-width:600px){
+    main{padding:20px 14px 60px;}
+    .header-inner{padding:24px 14px;}
+    .header-nav{margin-left:0;}
+    .card{padding:22px;}
+    .save-area{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="spinner"></div>
+  <p>Verbinde mit Datenbank…</p>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="header-emblem">🐴</div>
+    <div class="header-text">
+      <h1>Tippspiel<br>Reit-WM Aachen 2026</h1>
+      <p>FEI World Championships · 11.–23. August 2026</p>
+    </div>
+    <div class="header-nav" id="headerNav"></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- AUTH -->
+  <div class="view active" id="view-auth">
+    <div class="register-wrap">
+      <div class="card">
+        <div id="formRegister">
+          <h2>Jetzt mitmachen 🐎</h2>
+          <p class="sub">Registriere dich und gib deine Tipps ab!</p>
+          <label>Dein Name</label>
+          <input type="text" id="regName" placeholder="z.B. Anna Müller" maxlength="40">
+          <label>Passwort (mind. 4 Zeichen)</label>
+          <input type="password" id="regPass" placeholder="Passwort wählen">
+          <div class="error-msg" id="regError"></div>
+          <button class="btn btn-primary" onclick="register()">Registrieren &amp; los tippen</button>
+          <div class="switch-hint">Schon dabei? <button class="link-btn" onclick="toggleForm(false)">Einloggen</button></div>
+        </div>
+        <div id="formLogin" style="display:none">
+          <h2>Willkommen zurück 👋</h2>
+          <p class="sub">Logge dich ein um deine Tipps zu sehen oder zu ändern.</p>
+          <label>Dein Name</label>
+          <input type="text" id="loginName" placeholder="Dein Name">
+          <label>Passwort</label>
+          <input type="password" id="loginPass" placeholder="Dein Passwort">
+          <div class="error-msg" id="loginError"></div>
+          <button class="btn btn-primary" onclick="login()">Einloggen</button>
+          <div class="switch-hint">Neu hier? <button class="link-btn" onclick="toggleForm(true)">Registrieren</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPPS -->
+  <div class="view" id="view-tips">
+    <div class="deadline-banner">⏰ <strong>Tippabgabe bis 10. August 2026, 23:59 Uhr</strong> — Danach sind keine Änderungen mehr möglich.</div>
+    <div class="tips-header">
+      <h2>Deine Tipps</h2>
+      <div class="user-badge" id="userBadge">👤</div>
+    </div>
+    <div class="points-overview">
+      <h3>🏆 Punktesystem</h3>
+      <div class="points-list">
+        <div class="points-item">Einzel-Gold richtig <span class="pts">5 Pkt</span></div>
+        <div class="points-item">Team-Gold richtig <span class="pts">4 Pkt</span></div>
+        <div class="points-item">DE-Medaille richtig <span class="pts">3 Pkt</span></div>
+        <div class="points-item">Bestes Gesamtland <span class="pts">4 Pkt</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">🥇 Einzel-Weltmeister <span class="badge">5 Punkte je Tipp</span></div>
+    <div class="tips-grid" id="gridEinzel"></div>
+
+    <div class="section-title">🤝 Team-Weltmeister <span class="badge">4 Punkte je Tipp</span></div>
+    <div class="tips-grid" id="gridTeam"></div>
+
+    <div class="section-title">🇩🇪 Deutschland – welche Medaille? <span class="badge">3 Punkte je Tipp</span></div>
+    <div class="germany-grid" id="gridGermany"></div>
+
+    <div class="section-title">🌍 Gesamtbestes Land (Medaillenspiegel) <span class="badge">4 Punkte</span></div>
+    <div class="medal-table-wrap">
+      <label>Welches Land holt die meisten Goldmedaillen?</label>
+      <select id="tipMedalTable"><option value="">— Land auswählen —</option></select>
+      <div class="pts-info" style="font-size:11px;color:var(--muted);margin-top:6px">4 Punkte bei richtigem Tipp</div>
+    </div>
+
+    <div class="save-area">
+      <div>
+        <strong>Tipps speichern</strong>
+        <p>Deine Tipps werden für alle sichtbar in der Rangliste gespeichert.<br>Änderungen sind bis 10. August möglich.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="saveTips()" style="width:auto">💾 Tipps speichern</button>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Abmelden</button>
+      </div>
+    </div>
+    <div class="success-msg" id="saveMsg">✅ Deine Tipps wurden gespeichert!</div>
+  </div>
+
+  <!-- RANGLISTE -->
+  <div class="view" id="view-ranking">
+    <div class="ranking-header">
+      <h2>🏆 Rangliste</h2>
+      <p>Punkte werden nach Eintrag der offiziellen Ergebnisse durch den Admin berechnet.</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Rang</th><th>Name</th><th>Punkte</th><th>Tipps</th>
+        </tr>
+      </thead>
+      <tbody id="rankingBody"><tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">Lade Rangliste…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="view" id="view-admin">
+    <div class="section-title">⚙️ Admin – Ergebnisse eintragen</div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:24px">Trage die offiziellen WM-Ergebnisse ein. Danach „Punkte berechnen" klicken.</p>
+
+    <div class="section-title" style="font-size:16px">🥇 Einzel-Gold je Disziplin</div>
+    <div class="admin-grid" id="adminEinzel"></div>
+
+    <div class="section-title" style="font-size:16px">🤝 Team-Gold je Disziplin</div>
+    <div class="admin-grid" id="adminTeam"></div>
+
+    <div class="section-title" style="font-size:16px">🇩🇪 Deutschland – tatsächliche Ergebnisse</div>
+    <div class="admin-grid" id="adminGermany"></div>
+
+    <div class="section-title" style="font-size:16px">🌍 Bestes Gesamtland</div>
+    <div class="admin-card" style="max-width:360px;margin-bottom:32px">
+      <div class="disc-label">Medaillenspiegel-Gewinner</div>
+      <select id="adminMedalTable"><option value="">— Noch offen —</option></select>
+      <button class="btn btn-secondary" onclick="saveResult('medalTable', document.getElementById('adminMedalTable').value)">Speichern</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-primary btn-sm" onclick="recalcAll()" style="width:auto">🔄 Punkte für alle berechnen</button>
+      <span id="recalcMsg" style="color:var(--green);font-weight:600;font-size:14px;display:none">✅ Punkte aktualisiert!</span>
+    </div>
+
+    <div style="margin-top:40px">
+      <div class="section-title" style="font-size:16px">👥 Alle Teilnehmer</div>
+      <div id="adminUsers"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Firebase CDN -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ── CONFIG ──────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyDi9a6cKImUxB1k5wS2Is3zk61Lxr7H99k",
+  authDomain: "tippspiel-aachen.firebaseapp.com",
+  databaseURL: "https://tippspiel-aachen-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "tippspiel-aachen",
+  storageBucket: "tippspiel-aachen.firebasestorage.app",
+  messagingSenderId: "911142057128",
+  appId: "1:911142057128:web:451bd3976d575f032d3e9d"
+};
+
+const ADMIN_PASSWORD = "admin2026"; // ← Hier ändern!
+
+const DISCIPLINES = [
+  { id:"springen",    label:"Springreiten",              emoji:"🏇", team:true },
+  { id:"dressur",     label:"Dressur",                   emoji:"🎠", team:true },
+  { id:"eventing",    label:"Vielseitigkeit (Eventing)", emoji:"🌿", team:true },
+  { id:"fahren",      label:"Vierspännerfahren",         emoji:"🚗", team:true },
+  { id:"voltige",     label:"Voltigieren",               emoji:"🤸", team:true },
+  { id:"paradressur", label:"Para-Dressur (Einzel)",     emoji:"🌟", team:false },
+];
+
+const COUNTRIES = [
+  "Deutschland","Niederlande","Großbritannien","Frankreich","USA","Belgien",
+  "Schweden","Schweiz","Dänemark","Irland","Australien","Kanada","Österreich",
+  "Spanien","Norwegen","Polen","Portugal","Finnland","Brasilien","Neuseeland",
+  "Argentinien","Japan","China","Andere"
+];
+
+const MEDAL_OPTS = [
+  { v:"gold",   l:"🥇 Gold" },
+  { v:"silver", l:"🥈 Silber" },
+  { v:"bronze", l:"🥉 Bronze" },
+  { v:"none",   l:"❌ Keine" },
+];
+
+const POINTS = { einzel:5, team:4, germany:3, medalTable:4 };
+
+// ── FIREBASE INIT ────────────────────────────────────
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ── STATE ────────────────────────────────────────────
+let currentUser = null; // { key, displayName, isAdmin }
+let allUsers    = {};
+let results     = {};
+
+// ── HELPERS ─────────────────────────────────────────
+const dbRef  = path => ref(db, path);
+const loader = document.getElementById("loader");
+
+function hideLoader() { loader.style.display = "none"; }
+function showView(name) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-"+name)?.classList.add("active");
+}
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = "block";
+}
+function hideError(id) { document.getElementById(id).style.display = "none"; }
+function sanitizeKey(name) { return name.trim().toLowerCase().replace(/[^a-z0-9äöüß]/g,"_"); }
+
+function countryOptions(selected="") {
+  return `<option value="">— Land auswählen —</option>` +
+    COUNTRIES.map(c=>`<option value="${c}" ${selected===c?"selected":""}>${c}</option>`).join("");
+}
+
+// ── AUTH ─────────────────────────────────────────────
+window.toggleForm = (reg) => {
+  document.getElementById("formRegister").style.display = reg ? "block" : "none";
+  document.getElementById("formLogin").style.display    = reg ? "none"  : "block";
+};
+
+window.register = async () => {
+  const name = document.getElementById("regName").value.trim();
+  const pass = document.getElementById("regPass").value;
+  hideError("regError");
+  if (!name)          { showError("regError","Bitte einen Namen eingeben."); return; }
+  if (pass.length < 4){ showError("regError","Passwort muss mind. 4 Zeichen haben."); return; }
+
+  const key  = sanitizeKey(name);
+  const snap = await get(dbRef("users/"+key));
+  if (snap.exists())  { showError("regError","Dieser Name ist bereits vergeben."); return; }
+
+  await set(dbRef("users/"+key), { displayName:name, pass, tips:{}, points:0 });
+  currentUser = { key, displayName:name, isAdmin:false };
+  sessionStorage.setItem("wm_session", JSON.stringify(currentUser));
+  initApp();
+};
+
+window.login = async () => {
+  const name = document.getElementById("loginName").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  hideError("loginError");
+
+  if (name.toLowerCase() === "admin") {
+    if (pass !== ADMIN_PASSWORD) { showError("loginError","Falsches Admin-Passwort."); return; }
+    currentUser = { key:"__admin__", displayName:"Admin", isAdmin:true };
+    sessionStorage.setItem("wm_session", JSON.stringify(currentUser));
+    initApp();
+    return;
+  }
+
+  const key  = sanitizeKey(name);
+  const snap = await get(dbRef("users/"+key));
+  if (!snap.exists())         { showError("loginError","Name nicht gefunden."); return; }
+  const data = snap.val();
+  if (data.pass !== pass)     { showError("loginError","Falsches Passwort."); return; }
+  currentUser = { key, displayName:data.displayName, isAdmin:false };
+  sessionStorage.setItem("wm_session", JSON.stringify(currentUser));
+  initApp();
+};
+
+window.logout = () => {
+  sessionStorage.removeItem("wm_session");
+  location.reload();
+};
+
+// ── NAVIGATION ───────────────────────────────────────
+function buildNav() {
+  const nav = document.getElementById("headerNav");
+  const tabs = currentUser.isAdmin
+    ? [{id:"admin",l:"⚙️ Admin"},{id:"ranking",l:"🏆 Rangliste"}]
+    : [{id:"tips",l:"🐎 Meine Tipps"},{id:"ranking",l:"🏆 Rangliste"}];
+  nav.innerHTML = tabs.map(t =>
+    `<button class="nav-btn" onclick="switchTab('${t.id}',this)">${t.l}</button>`
+  ).join("") + `<button class="nav-btn" onclick="logout()">Abmelden</button>`;
+}
+
+window.switchTab = (name, btn) => {
+  showView(name);
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  btn?.classList.add("active");
+  if (name==="ranking") loadRanking();
+  if (name==="admin")   loadAdminResults();
+};
+
+// ── INIT APP ─────────────────────────────────────────
+function initApp() {
+  buildNav();
+  if (currentUser.isAdmin) {
+    showView("admin");
+    buildAdminView();
+    loadAdminResults();
+  } else {
+    showView("tips");
+    buildTipsView();
+  }
+  loadRanking();
+}
+
+// ── TIPS VIEW ────────────────────────────────────────
+async function buildTipsView() {
+  document.getElementById("userBadge").textContent = "👤 " + currentUser.displayName;
+
+  // load existing tips
+  const snap = await get(dbRef("users/"+currentUser.key+"/tips"));
+  const tips  = snap.exists() ? snap.val() : {};
+
+  // Einzel
+  document.getElementById("gridEinzel").innerHTML = DISCIPLINES.map(d=>`
+    <div class="tip-card">
+      <div class="disc">${d.emoji} ${d.label}</div>
+      <div class="question">Wer holt Einzel-Gold?</div>
+      <select id="t_einzel_${d.id}">${countryOptions(tips["einzel_"+d.id]||"")}</select>
+      <div class="pts-info">5 Punkte bei richtigem Tipp</div>
+    </div>`).join("");
+
+  // Team
+  document.getElementById("gridTeam").innerHTML = DISCIPLINES.filter(d=>d.team).map(d=>`
+    <div class="tip-card">
+      <div class="disc">${d.emoji} ${d.label}</div>
+      <div class="question">Welches Land holt Team-Gold?</div>
+      <select id="t_team_${d.id}">${countryOptions(tips["team_"+d.id]||"")}</select>
+      <div class="pts-info">4 Punkte bei richtigem Tipp</div>
+    </div>`).join("");
+
+  // Germany
+  document.getElementById("gridGermany").innerHTML = DISCIPLINES.map(d=>{
+    const cur = tips["germany_"+d.id]||"";
+    return `<div class="tip-card">
+      <div class="disc">${d.emoji} ${d.label}</div>
+      <div class="question">Deutschland – welche Medaille?</div>
+      <div class="medal-btns" id="mb_${d.id}">
+        ${MEDAL_OPTS.map(m=>`
+          <button class="medal-btn ${cur===m.v?"sel-"+m.v:""}"
+            onclick="selectMedal('${d.id}','${m.v}',this)">${m.l}</button>`).join("")}
+      </div>
+      <div class="pts-info">3 Punkte bei richtigem Tipp</div>
+    </div>`;
+  }).join("");
+
+  // Medal table
+  document.getElementById("tipMedalTable").innerHTML = countryOptions(tips["medalTable"]||"");
+}
+
+window.selectMedal = (discId, value, btn) => {
+  btn.closest(".medal-btns").querySelectorAll(".medal-btn").forEach(b=>b.className="medal-btn");
+  btn.classList.add("sel-"+value);
+};
+
+function collectTips() {
+  const tips = {};
+  DISCIPLINES.forEach(d=>{
+    const e = document.getElementById("t_einzel_"+d.id)?.value;
+    if (e) tips["einzel_"+d.id] = e;
+    if (d.team) {
+      const t = document.getElementById("t_team_"+d.id)?.value;
+      if (t) tips["team_"+d.id] = t;
+    }
+    const sel = document.querySelector(`#mb_${d.id} .medal-btn[class*="sel-"]`);
+    if (sel) {
+      const cls = [...sel.classList].find(c=>c.startsWith("sel-"));
+      if (cls) tips["germany_"+d.id] = cls.replace("sel-","");
+    }
+  });
+  const mt = document.getElementById("tipMedalTable")?.value;
+  if (mt) tips["medalTable"] = mt;
+  return tips;
+}
+
+window.saveTips = async () => {
+  const tips = collectTips();
+  await update(dbRef("users/"+currentUser.key), { tips });
+  const msg = document.getElementById("saveMsg");
+  msg.style.display = "block";
+  setTimeout(()=>msg.style.display="none", 3000);
+  loadRanking();
+};
+
+// ── RANKING ──────────────────────────────────────────
+function loadRanking() {
+  onValue(dbRef("users"), snap => {
+    const tbody = document.getElementById("rankingBody");
+    if (!snap.exists()) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">Noch keine Teilnehmer</td></tr>`;
+      return;
+    }
+    const users = Object.values(snap.val()).sort((a,b)=>(b.points||0)-(a.points||0));
+    tbody.innerHTML = users.map((u,i)=>{
+      const rank = i+1;
+      const rc   = rank===1?"r1":rank===2?"r2":rank===3?"r3":"rn";
+      const tips = u.tips ? Object.keys(u.tips).length : 0;
+      const pts  = u.points||0;
+      return `<tr>
+        <td><span class="rank-badge ${rc}">${rank}</span></td>
+        <td><strong>${u.displayName}</strong></td>
+        <td><span class="score-pill ${pts===0?"score-zero":""}">${pts} Pkt</span></td>
+        <td>${tips} Tipp${tips!==1?"s":""}</td>
+      </tr>`;
+    }).join("");
+  }, { onlyOnce:true });
+}
+
+// ── ADMIN ────────────────────────────────────────────
+function buildAdminView() {
+  const countryOpts = `<option value="">— Noch offen —</option>` +
+    COUNTRIES.map(c=>`<option value="${c}">${c}</option>`).join("");
+
+  document.getElementById("adminEinzel").innerHTML = DISCIPLINES.map(d=>`
+    <div class="admin-card">
+      <div class="disc-label">${d.emoji} ${d.label}</div>
+      <label>Einzel-Gold (Land/Reiter)</label>
+      <select id="r_einzel_${d.id}">${countryOpts}</select>
+      <button class="btn btn-secondary" onclick="saveResult('einzel_${d.id}',document.getElementById('r_einzel_${d.id}').value)">Speichern</button>
+    </div>`).join("");
+
+  document.getElementById("adminTeam").innerHTML = DISCIPLINES.filter(d=>d.team).map(d=>`
+    <div class="admin-card">
+      <div class="disc-label">${d.emoji} ${d.label}</div>
+      <label>Team-Gold (Land)</label>
+      <select id="r_team_${d.id}">${countryOpts}</select>
+      <button class="btn btn-secondary" onclick="saveResult('team_${d.id}',document.getElementById('r_team_${d.id}').value)">Speichern</button>
+    </div>`).join("");
+
+  document.getElementById("adminGermany").innerHTML = DISCIPLINES.map(d=>`
+    <div class="admin-card">
+      <div class="disc-label">${d.emoji} ${d.label}</div>
+      <label>Deutschland – Ergebnis</label>
+      <select id="r_germany_${d.id}">
+        <option value="">— Noch offen —</option>
+        ${MEDAL_OPTS.map(m=>`<option value="${m.v}">${m.l}</option>`).join("")}
+      </select>
+      <button class="btn btn-secondary" onclick="saveResult('germany_${d.id}',document.getElementById('r_germany_${d.id}').value)">Speichern</button>
+    </div>`).join("");
+
+  document.getElementById("adminMedalTable").innerHTML =
+    `<option value="">— Noch offen —</option>` +
+    COUNTRIES.map(c=>`<option value="${c}">${c}</option>`).join("");
+}
+
+async function loadAdminResults() {
+  const snap = await get(dbRef("results"));
+  if (!snap.exists()) return;
+  const r = snap.val();
+  Object.keys(r).forEach(key => {
+    const el = document.getElementById("r_"+key) || document.getElementById("adminMedalTable");
+    if (el && key === "medalTable") el.value = r[key];
+    else if (el) el.value = r[key];
+  });
+
+  // Also load users table
+  const uSnap = await get(dbRef("users"));
+  if (!uSnap.exists()) return;
+  const users = uSnap.val();
+  const rows = Object.entries(users).map(([k,u])=>`
+    <tr>
+      <td><strong>${u.displayName}</strong></td>
+      <td>${u.points||0} Pkt</td>
+      <td>${u.tips?Object.keys(u.tips).length:0} Tipps</td>
+      <td><button class="btn btn-danger" onclick="deleteUser('${k}')">Löschen</button></td>
+    </tr>`).join("");
+  document.getElementById("adminUsers").innerHTML = `
+    <table><thead><tr><th>Name</th><th>Punkte</th><th>Tipps</th><th>Aktion</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+window.saveResult = async (key, value) => {
+  if (!value) { alert("Bitte einen Wert auswählen."); return; }
+  await set(dbRef("results/"+key), value);
+  alert("✅ Gespeichert: " + key + " = " + value);
+};
+
+window.recalcAll = async () => {
+  const [usersSnap, resSnap] = await Promise.all([get(dbRef("users")), get(dbRef("results"))]);
+  if (!usersSnap.exists()) return;
+  const users = usersSnap.val();
+  const res   = resSnap.exists() ? resSnap.val() : {};
+
+  const updates = {};
+  Object.entries(users).forEach(([key, u]) => {
+    const tips = u.tips || {};
+    let pts = 0;
+    DISCIPLINES.forEach(d => {
+      if (res["einzel_"+d.id]   && tips["einzel_"+d.id]   === res["einzel_"+d.id])   pts += POINTS.einzel;
+      if (d.team && res["team_"+d.id] && tips["team_"+d.id] === res["team_"+d.id])   pts += POINTS.team;
+      if (res["germany_"+d.id]  && tips["germany_"+d.id]  === res["germany_"+d.id])  pts += POINTS.germany;
+    });
+    if (res["medalTable"] && tips["medalTable"] === res["medalTable"]) pts += POINTS.medalTable;
+    updates["users/"+key+"/points"] = pts;
+  });
+
+  await update(dbRef(""), updates);
+  loadRanking();
+  loadAdminResults();
+  const msg = document.getElementById("recalcMsg");
+  msg.style.display = "inline";
+  setTimeout(()=>msg.style.display="none", 3000);
+};
+
+window.deleteUser = async (key) => {
+  if (!confirm("Nutzer wirklich löschen?")) return;
+  await remove(dbRef("users/"+key));
+  loadAdminResults();
+  loadRanking();
+};
+
+// ── STARTUP ──────────────────────────────────────────
+(async () => {
+  try {
+    // Restore session
+    const saved = sessionStorage.getItem("wm_session");
+    if (saved) {
+      currentUser = JSON.parse(saved);
+      // Verify user still exists (unless admin)
+      if (!currentUser.isAdmin) {
+        const snap = await get(dbRef("users/"+currentUser.key));
+        if (!snap.exists()) { sessionStorage.removeItem("wm_session"); currentUser = null; }
+      }
+    }
+    if (currentUser) {
+      initApp();
+    } else {
+      showView("auth");
+    }
+  } catch(e) {
+    console.error(e);
+    showView("auth");
+  } finally {
+    hideLoader();
+  }
+})();
+</script>
+</body>
+</html>
